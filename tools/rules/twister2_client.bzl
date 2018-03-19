@@ -119,6 +119,10 @@ def twister2_client_lib_common_files():
     return [
         "//twister2/common/src/java:config-java",
         "//twister2/common/src/java:common-java",
+        "@org_apache_kafka_kafka_clients//jar",
+        "@org_slf4j_slf4j_api//jar",
+        "@org_lz4_lz4_java//jar",
+        "@org_xerial_snappy_snappy_java//jar",
     ]
 
 def twister2_client_example_files():

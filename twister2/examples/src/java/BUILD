@@ -13,6 +13,10 @@ common_deps_files = [
     "@lmdb_java//jar",
     "@commons_lang_commons_lang//jar",
     "@commons_cli_commons_cli//jar",
+    "@org_apache_kafka_kafka_clients//jar",
+    "@org_slf4j_slf4j_api//jar",
+    "@org_lz4_lz4_java//jar",
+    "@org_xerial_snappy_snappy_java//jar",
    ]
 
 java_library(
