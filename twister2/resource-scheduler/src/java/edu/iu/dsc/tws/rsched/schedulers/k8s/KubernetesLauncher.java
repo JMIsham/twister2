@@ -11,11 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.scheduler.ILauncher;
 
@@ -49,6 +51,18 @@ public class KubernetesLauncher implements ILauncher {
   public boolean launch(RequestedResources resourceRequest, JobAPI.Job job) {
 
     String jobName = job.getJobName();
+
+    String jobPackageFile = SchedulerContext.temporaryPackagesPath(config) + "/"
+        + SchedulerContext.jobPackageFileName(config);
+
+    File jobFile = new File(jobPackageFile);
+    if (!jobFile.exists()) {
+      LOG.log(Level.SEVERE, "Can not access job package file: " + jobPackageFile
+          + "\nAborting submission.");
+      return false;
+    }
+
+    long jobFileSize = jobFile.length();
 
     // first check whether there is a running service
     String serviceName = KubernetesUtils.createServiceName(jobName);
@@ -84,11 +98,42 @@ public class KubernetesLauncher implements ILauncher {
     }
 
     // create the StatefulSet for this job
-    int containersPerPod = KubernetesContext.containersPerPod(config);
-    V1beta2StatefulSet statefulSet =
-        KubernetesUtils.createStatefulSetObjectForJob(jobName, resourceRequest, containersPerPod);
+    V1beta2StatefulSet statefulSet = KubernetesUtils.createStatefulSetObjectForJob(
+        jobName, resourceRequest, jobFileSize, config);
 
-    return controller.createStatefulSetJob(namespace, statefulSet);
+    if (statefulSet == null) {
+      controller.deleteService(namespace, serviceName);
+      return false;
+    }
+
+    boolean statefulSetCreated = controller.createStatefulSetJob(namespace, statefulSet);
+    if (!statefulSetCreated) {
+      controller.deleteService(namespace, serviceName);
+      return false;
+    }
+
+    int numberOfPods = statefulSet.getSpec().getReplicas();
+
+    long start = System.currentTimeMillis();
+
+//    boolean transferred =
+//      controller.transferJobPackageSequentially(namespace, jobName, numberOfPods, jobPackageFile);
+
+    boolean transferred =
+        controller.transferJobPackageInParallel(namespace, jobName, numberOfPods, jobPackageFile);
+
+    long duration = System.currentTimeMillis() - start;
+    System.out.println("Transferring all files took: " + duration + " ms.");
+
+    if (!transferred) {
+      LOG.log(Level.SEVERE, "Transferring the job package to some pods failed. "
+          + "Terminating the job");
+
+//      terminateJob(jobName);
+      return false;
+    }
+
+    return true;
   }
 
 
@@ -100,7 +145,7 @@ public class KubernetesLauncher implements ILauncher {
   }
 
   /**
-   * Terminate the Aurora Job
+   * Terminate the Kubernetes Job
    */
   @Override
   public boolean terminateJob(String jobName) {
