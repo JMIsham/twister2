@@ -14,6 +14,7 @@ def twister2_client_conf_files():
         "//twister2/config/src/yaml:conf-nodesmpi-yaml",
         "//twister2/config/src/yaml:conf-aurora-yaml",
         "//twister2/config/src/yaml:conf-kubernetes-yaml",
+	"//twister2/config/src/yaml:conf-mesos-yaml",
     ]
 
 def twister2_client_local_files():
@@ -39,6 +40,11 @@ def twister2_client_aurora_files():
 def twister2_client_kubernetes_files():
     return [
         "//twister2/config/src/yaml:conf-kubernetes-yaml",
+    ]
+
+def twister2_client_mesos_files():
+    return [
+        "//twister2/config/src/yaml:conf-mesos-yaml",
     ]
 
 def twister2_client_standalone_files():
@@ -70,10 +76,12 @@ def twister2_client_lib_resource_scheduler_files():
         "@org_apache_zookeeper_zookeeper//jar",
         "@io_kubernetes_client_java//jar",
         "@io_kubernetes_client_java_api//jar",
+        "@io_kubernetes_client_java_proto//jar",
         "@io_swagger_swagger_annotations//jar",
         "@com_google_code_gson_gson//jar",
         "@com_squareup_okhttp_okhttp//jar",
-        "@log4j_log4j//jar",
+        "@com_squareup_okhttp_logging_interceptor//jar",
+        "@com_squareup_okhttp_okhttp_ws//jar",
         "@com_squareup_okio_okio//jar",
         "@joda_time_joda_time//jar",
         "@commons_codec_commons_codec//jar",

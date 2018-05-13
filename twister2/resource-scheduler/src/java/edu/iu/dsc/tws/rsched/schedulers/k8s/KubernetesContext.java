@@ -18,8 +18,8 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class KubernetesContext extends SchedulerContext {
 
-  public static final int CONTAINERS_PER_POD_DEFAULT = 1;
-  public static final String CONTAINERS_PER_POD = "kubernetes.containers_per_pod";
+  public static final int WORKERS_PER_POD_DEFAULT = 1;
+  public static final String WORKERS_PER_POD = "kubernetes.workers.per.pod";
 
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
@@ -48,7 +48,7 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_STORAGE_RECLAIM_POLICY_DEFAULT = "Retain";
   public static final String K8S_STORAGE_RECLAIM_POLICY = "kubernetes.storage.reclaim.policy";
 
-  // it can be either "system" or "kubernetes"
+  // it can be either "system" or "kubernetes". currently not used.
   public static final String PERSISTENT_LOGGING_TYPE_DEFAULT = "system";
   public static final String PERSISTENT_LOGGING_TYPE = "persistent.logging.type";
 
@@ -66,8 +66,8 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_WORKER_MAPPING_UNIFORM_DEFAULT = "none";
   public static final String K8S_WORKER_MAPPING_UNIFORM = "kubernetes.worker.mapping.uniform";
 
-  public static int containersPerPod(Config cfg) {
-    return cfg.getIntegerValue(CONTAINERS_PER_POD, CONTAINERS_PER_POD_DEFAULT);
+  public static int workersPerPod(Config cfg) {
+    return cfg.getIntegerValue(WORKERS_PER_POD, WORKERS_PER_POD_DEFAULT);
   }
 
   public static String namespace(Config cfg) {

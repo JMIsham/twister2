@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -25,7 +26,6 @@ import edu.iu.dsc.tws.rsched.bootstrap.IWorkerController;
 import edu.iu.dsc.tws.rsched.bootstrap.WorkerNetworkInfo;
 import edu.iu.dsc.tws.rsched.spi.container.IPersistentVolume;
 import edu.iu.dsc.tws.rsched.spi.container.IWorker;
-import edu.iu.dsc.tws.rsched.spi.container.IWorkerLogger;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourcePlan;
 
 public class BasicK8sWorker implements IWorker {
@@ -36,8 +36,7 @@ public class BasicK8sWorker implements IWorker {
                    int id,
                    ResourcePlan resourcePlan,
                    IWorkerController workerController,
-                   IPersistentVolume persistentVolume,
-                   IWorkerLogger logger) {
+                   IPersistentVolume persistentVolume) {
 
     int port = workerController.getWorkerNetworkInfo().getWorkerPort();
 
@@ -57,7 +56,7 @@ public class BasicK8sWorker implements IWorker {
     try {
       serverSocket = new ServerSocket(workerNetworkInfo.getWorkerPort());
     } catch (IOException e) {
-      e.printStackTrace();
+      LOG.log(Level.SEVERE, "Could not start ServerSocket.", e);
     }
 
     LOG.info("Echo Started server on port " + workerNetworkInfo.getWorkerPort());

@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.basic;
 
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -23,15 +24,18 @@ import edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraContext;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
 public final class BasicKubernetesJob {
+  private static final Logger LOG = Logger.getLogger(BasicKubernetesJob.class.getName());
+
   private BasicKubernetesJob() {
   }
 
   public static void main(String[] args) {
 
+//    LoggingHelper.setupLogging(null, "logs", "client");
+
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
-    System.out.println("read config values: " + config.size());
-    System.out.println(config);
+    LOG.fine("read config values: " + config.size() + "\n" + config);
 
     if (args.length == 0) {
       printUsage();
@@ -50,13 +54,12 @@ public final class BasicKubernetesJob {
    */
   public static void submitJob(Config config) {
 
-    double cpus = Double.parseDouble(AuroraContext.cpusPerContainer(config));
-    int ramMegaBytes = AuroraContext.ramPerContainer(config);
-    int diskMegaBytes = AuroraContext.diskPerContainer(config);
-    int containers = Integer.parseInt(AuroraContext.numberOfContainers(config));
+    double cpus = SchedulerContext.workerCPU(config);
+    int ramMegaBytes = SchedulerContext.workerRAM(config);
+    int workers = SchedulerContext.workerInstances(config);
+    int diskMegaBytes = AuroraContext.workerDisk(config);
     String jobName = SchedulerContext.jobName(config);
-    ResourceContainer resourceContainer =
-        new ResourceContainer((int) cpus, ramMegaBytes, diskMegaBytes);
+    ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
@@ -67,7 +70,7 @@ public final class BasicKubernetesJob {
     BasicJob basicJob = BasicJob.newBuilder()
         .setName(jobName)
         .setContainerClass(containerClass)
-        .setRequestResource(resourceContainer, containers)
+        .setRequestResource(resourceContainer, workers)
         .setConfig(jobConfig)
         .build();
 
@@ -88,8 +91,10 @@ public final class BasicKubernetesJob {
    * print usage
    */
   public static void printUsage() {
-    System.out.println("Usage: Currently following actions are supported: ");
-    System.out.println("\tedu.iu.dsc.tws.examples.basic.BasicKubernetesJob submit");
-    System.out.println("\tedu.iu.dsc.tws.examples.basic.BasicKubernetesJob terminate");
+    StringBuffer logBuffer = new StringBuffer();
+    logBuffer.append("Usage: Currently following actions are supported: \n");
+    logBuffer.append("\tedu.iu.dsc.tws.examples.basic.BasicKubernetesJob submit\n");
+    logBuffer.append("\tedu.iu.dsc.tws.examples.basic.BasicKubernetesJob terminate\n");
+    LOG.severe(logBuffer.toString());
   }
 }

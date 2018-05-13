@@ -20,8 +20,8 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.basic.job.BasicJob;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TWSNetwork;
-import edu.iu.dsc.tws.executor.DefaultExecutor;
 import edu.iu.dsc.tws.executor.ExecutionPlan;
+import edu.iu.dsc.tws.executor.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.spi.container.IContainer;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.tsched.RoundRobin.RoundRobinTaskScheduling;
+import edu.iu.dsc.tws.tsched.roundrobin.RoundRobinTaskScheduling;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -41,23 +41,15 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 public class TaskExample implements IContainer {
   @Override
   public void init(Config config, int id, ResourcePlan resourcePlan) {
-    Generator g = new Generator();
-    Receiver r = new Receiver();
+    GeneratorTask g = new GeneratorTask();
+    RecevingTask r = new RecevingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
-
-    builder.addConfiguration("source", "Ram", 512);
-    builder.addConfiguration("source", "Disk", 1000);
-    builder.addConfiguration("source", "Cpu", 2);
-
-    builder.addConfiguration("sink", "Ram", 300);
-    builder.addConfiguration("sink", "Disk", 1000);
-    builder.addConfiguration("sink", "Cpu", 2);
-    builder.connect("source", "sink", "e1", Operations.PARTITION);
+    builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
 
     DataFlowTaskGraph graph = builder.build();
 
@@ -68,8 +60,8 @@ public class TaskExample implements IContainer {
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
 
     TWSNetwork network = new TWSNetwork(config, resourcePlan.getThisId());
-    DefaultExecutor defaultExecutor = new DefaultExecutor(resourcePlan, network);
-    ExecutionPlan plan = defaultExecutor.schedule(config, graph, taskSchedulePlan);
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resourcePlan, network);
+    ExecutionPlan plan = executionPlanBuilder.schedule(config, graph, taskSchedulePlan);
 
     // we need to progress the channel
     while (true) {
@@ -77,13 +69,13 @@ public class TaskExample implements IContainer {
     }
   }
 
-  private static class Generator extends SourceTask {
+  private static class GeneratorTask extends SourceTask {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
     @Override
     public void run() {
-      ctx.write("Hello");
+      ctx.write("e1", "Hello");
     }
 
     @Override
@@ -92,7 +84,7 @@ public class TaskExample implements IContainer {
     }
   }
 
-  private static class Receiver extends SinkTask {
+  private static class RecevingTask extends SinkTask {
     private static final long serialVersionUID = -254264903510284798L;
     @Override
     public void execute(IMessage message) {

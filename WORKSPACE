@@ -32,12 +32,22 @@ maven_server(
 
 maven_jar(
   name = "io_kubernetes_client_java",
-  artifact = "io.kubernetes:client-java:1.0.0-beta2",
+  artifact = "io.kubernetes:client-java:1.0.0",
 )
 
 maven_jar(
   name = "io_kubernetes_client_java_api",
-  artifact = "io.kubernetes:client-java-api:1.0.0-beta2",
+  artifact = "io.kubernetes:client-java-api:1.0.0",
+)
+
+maven_jar(
+  name = "io_kubernetes_client_java_proto",
+  artifact = "io.kubernetes:client-java-proto:1.0.0",
+)
+
+maven_jar(
+  name = "org_apache_mesos_mesos",
+  artifact = "org.apache.mesos:mesos:1.5.0",
 )
 
 maven_jar(
@@ -56,13 +66,18 @@ maven_jar(
 )
 
 maven_jar(
-  name = "log4j_log4j",
-  artifact = "log4j:log4j:1.2.17",
+  name = "com_squareup_okio_okio",
+  artifact = "com.squareup.okio:okio:1.6.0",
 )
 
 maven_jar(
-  name = "com_squareup_okio_okio",
-  artifact = "com.squareup.okio:okio:1.6.0",
+  name = "com_squareup_okhttp_logging_interceptor",
+  artifact = "com.squareup.okhttp:logging-interceptor:2.7.5",
+)
+
+maven_jar(
+  name = "com_squareup_okhttp_okhttp_ws",
+  artifact = "com.squareup.okhttp:okhttp-ws:2.7.5",
 )
 
 maven_jar(
@@ -72,7 +87,7 @@ maven_jar(
 
 maven_jar(
   name = "commons_codec_commons_codec",
-  artifact = "commons-codec:commons-codec:1.10",
+  artifact = "commons-codec:commons-codec:1.11",
 )
 
 maven_jar(
@@ -316,17 +331,17 @@ maven_jar(
 
 maven_jar(
   name = "com_fasterxml_jackson_core_jackson_annotations",
-  artifact = "com.fasterxml.jackson.core:jackson-annotations:" + jackson_version,
+  artifact = "com.fasterxml.jackson.core:jackson-annotations:2.8.8",
 )
 
 maven_jar(
   name = "com_fasterxml_jackson_core_jackson_core",
-  artifact = "com.fasterxml.jackson.core:jackson-core:" + jackson_version,
+  artifact = "com.fasterxml.jackson.core:jackson-core:2.8.8",
 )
 
 maven_jar(
   name = "com_fasterxml_jackson_core_jackson_databind",
-  artifact = "com.fasterxml.jackson.core:jackson-databind:" + jackson_version,
+  artifact = "com.fasterxml.jackson.core:jackson-databind:2.8.8",
 )
 
 maven_jar(
@@ -347,13 +362,6 @@ maven_jar(
 maven_jar(
   name = "org_bouncycastle_bcpkix_jdk15on",
   artifact = "org.bouncycastle:bcpkix-jdk15on:1.56",
-)
-
-maven_jar(
-  name = "commons_codec_commons_codec",
-  artifact = "commons-codec:commons-codec:1.9",
-  repository = "http://central.maven.org/maven2/",
-  sha1 = "9ce04e34240f674bc72680f8b843b1457383161a",
 )
 
 maven_jar(

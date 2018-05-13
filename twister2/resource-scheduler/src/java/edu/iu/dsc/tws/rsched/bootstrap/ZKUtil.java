@@ -39,7 +39,7 @@ public final class ZKUtil {
   public static CuratorFramework connectToServer(Config config) {
 
     String zkServerAddress = ZKContext.zooKeeperServerIP(config);
-    String zkServerPort = ZKContext.zooKeeperServerPort(config);
+    int zkServerPort = ZKContext.zooKeeperServerPort(config);
     String zkServer = zkServerAddress + ":" + zkServerPort;
 
     try {
@@ -86,7 +86,7 @@ public final class ZKUtil {
       }
 
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.log(Level.SEVERE, "", e);
       return false;
     }
   }
@@ -155,7 +155,7 @@ public final class ZKUtil {
 
       return true;
     } catch (Exception e) {
-      e.printStackTrace();
+      LOG.log(Level.SEVERE, "", e);
       return false;
     }
   }

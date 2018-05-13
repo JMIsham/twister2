@@ -179,6 +179,17 @@ public class Config {
     return value != null ? value : defaultValue;
   }
 
+  @SuppressWarnings("unchecked")
+  public List<String> getListValue(String key) {
+    return (List) get(key);
+  }
+
+  public List<String> getListValue(String key, List<String> defaultValue) {
+    List<String> value = getListValue(key);
+    return value != null ? value : defaultValue;
+  }
+
+
   public Boolean getBooleanValue(String key) {
     return (Boolean) get(key);
   }
@@ -203,6 +214,20 @@ public class Config {
         return (Integer) value;
       } else if (value instanceof String) {
         return Integer.valueOf((String) value);
+      } else {
+        return defaultValue;
+      }
+    }
+    return defaultValue;
+  }
+
+  public Double getDoubleValue(String key, double defaultValue) {
+    Object value = get(key);
+    if (value != null) {
+      if (value instanceof Integer || value instanceof Double) {
+        return (Double) value;
+      } else if (value instanceof String) {
+        return Double.valueOf((String) value);
       } else {
         return defaultValue;
       }

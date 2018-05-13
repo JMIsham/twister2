@@ -17,10 +17,12 @@ import java.util.HashMap;
 import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.spi.resource.RequestedResources;
 import edu.iu.dsc.tws.rsched.spi.resource.ResourceContainer;
 
+import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.models.V1Affinity;
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1ContainerPort;
@@ -89,7 +91,7 @@ public final class RequestObjectBuilder {
     // by default they are started sequentially
     setSpec.setPodManagementPolicy("Parallel");
 
-    int containersPerPod = KubernetesContext.containersPerPod(config);
+    int containersPerPod = KubernetesContext.workersPerPod(config);
     int numberOfPods = resourceRequest.getNoOfContainers() / containersPerPod;
     setSpec.setReplicas(numberOfPods);
 
@@ -158,7 +160,7 @@ public final class RequestObjectBuilder {
 
     podSpec.setVolumes(volumes);
 
-    int containersPerPod = KubernetesContext.containersPerPod(config);
+    int containersPerPod = KubernetesContext.workersPerPod(config);
     int basePort = KubernetesContext.workerBasePort(config);
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
     for (int i = 0; i < containersPerPod; i++) {
@@ -219,11 +221,11 @@ public final class RequestObjectBuilder {
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     if (KubernetesContext.bindWorkerToCPU(config)) {
-      resReq.putLimitsItem("cpu", reqContainer.getNoOfCpus() + "");
-      resReq.putLimitsItem("memory", reqContainer.getMemoryMegaBytes() + "Mi");
+      resReq.putLimitsItem("cpu", new Quantity(reqContainer.getNoOfCpus() + ""));
+      resReq.putLimitsItem("memory", new Quantity(reqContainer.getMemoryMegaBytes() + "Mi"));
     } else {
-      resReq.putRequestsItem("cpu", reqContainer.getNoOfCpus() + "");
-      resReq.putRequestsItem("memory", reqContainer.getMemoryMegaBytes() + "Mi");
+      resReq.putRequestsItem("cpu", new Quantity(reqContainer.getNoOfCpus() + ""));
+      resReq.putRequestsItem("memory", new Quantity(reqContainer.getMemoryMegaBytes() + "Mi"));
     }
     container.setResources(resReq);
 
@@ -295,18 +297,31 @@ public final class RequestObjectBuilder {
         .value(persistentJobDir);
 
     V1EnvVar var8 = new V1EnvVar()
-        .name(KubernetesField.CONTAINERS_PER_POD + "")
-        .value(KubernetesContext.containersPerPod(config) + "");
+        .name(KubernetesField.WORKERS_PER_POD + "")
+        .value(KubernetesContext.workersPerPod(config) + "");
 
     V1EnvVar var9 = new V1EnvVar()
         .name(KubernetesField.PERSISTENT_LOGGING_REQUESTED + "")
-        .value(SchedulerContext.persistentLoggingRequested(config) + "");
+        .value(LoggingContext.persistentLoggingRequested(config) + "");
 
     V1EnvVar var10 = new V1EnvVar()
-        .name(KubernetesField.PERSISTENT_LOGGING_TYPE + "")
-        .value(KubernetesContext.persistentLoggingType(config) + "");
+        .name(KubernetesField.LOG_LEVEL + "")
+        .value(LoggingContext.loggingLevel(config));
 
-    container.setEnv(Arrays.asList(var1, var2, var3, var4, var5, var6, var7, var8, var9, var10));
+    V1EnvVar var11 = new V1EnvVar()
+        .name(KubernetesField.REDIRECT_SYS_OUT_ERR + "")
+        .value(LoggingContext.redirectSysOutErr(config) + "");
+
+    V1EnvVar var12 = new V1EnvVar()
+        .name(KubernetesField.LOGGING_MAX_FILE_SIZE + "")
+        .value(LoggingContext.maxLogFileSize(config) + "");
+
+    V1EnvVar var13 = new V1EnvVar()
+        .name(KubernetesField.LOGGING_MAX_FILES + "")
+        .value(LoggingContext.maxLogFiles(config) + "");
+
+    container.setEnv(Arrays.asList(
+        var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13));
   }
 
   public static void setNodeAffinity(Config config, V1Affinity affinity) {
@@ -445,8 +460,8 @@ public final class RequestObjectBuilder {
 
     String volumeSize = SchedulerContext.persistentVolumeTotal(config);
     V1PersistentVolumeSpec pvSpec = new V1PersistentVolumeSpec();
-    HashMap<String, String> capacity = new HashMap<>();
-    capacity.put("storage", volumeSize);
+    HashMap<String, Quantity> capacity = new HashMap<>();
+    capacity.put("storage", new Quantity(volumeSize));
     pvSpec.setCapacity(capacity);
 
     String storageClass = KubernetesContext.persistentStorageClass(config);
@@ -486,7 +501,7 @@ public final class RequestObjectBuilder {
 
     V1ResourceRequirements resources = new V1ResourceRequirements();
     String storageSize = SchedulerContext.persistentVolumePerWorker(config);
-    resources.putRequestsItem("storage", storageSize);
+    resources.putRequestsItem("storage", new Quantity(storageSize));
 //    resources.putRequestsItem("storage", Quantity.fromString("1Gi"));
     pvcSpec.setResources(resources);
 
